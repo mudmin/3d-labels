@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Labels</title>
+  <link rel="stylesheet" href="css/app.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/three.module.js" } }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7.5" cy="12" r="2.4" fill="currentColor"/><path d="M11.5 10.5h7M11.5 13.5h4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>3D Labels</span>
+    </div>
+    <button class="btn project-btn" id="btn-project" type="button" title="Projects: open, save, rename, download">
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span id="project-name">Project</span>
+      <span class="save-state" id="save-state"></span>
+    </button>
+    <div class="topbar-actions">
+      <button class="btn" id="btn-help" type="button">How to print</button>
+      <a class="btn donate" href="https://userspice.com/donate/" target="_blank" rel="noopener" title="Support this project">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" fill="currentColor"/></svg>
+        Donate
+      </a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <section class="panel">
+        <h2>Label size <span class="h-note">default for every label</span></h2>
+        <label>Preset
+          <select id="size-preset"></select>
+        </label>
+        <div class="row three">
+          <label>Width <input id="size-w" type="text" inputmode="decimal" data-len="size.w"></label>
+          <label>Height <input id="size-h" type="text" inputmode="decimal" data-len="size.h"></label>
+          <label title="Corner radius, mm">Corners <input type="number" min="0" step="0.5" data-k="size.r"></label>
+        </div>
+        <div class="seg-row">
+          <span class="muted">Units</span>
+          <div class="seg" data-k="units"><button type="button" data-v="in">inches</button><button type="button" data-v="mm">mm</button></div>
+        </div>
+        <div class="muted small" id="size-note"></div>
+        <details class="calc">
+          <summary>Size from a row of bins</summary>
+          <div class="row three">
+            <label>Row width <input id="calc-row" type="text" inputmode="decimal" value="24&quot;"></label>
+            <label>Bins in row <input id="calc-n" type="number" min="1" step="1" value="6"></label>
+            <label title="Taken off the width of each bin, for walls and a little clearance">Less <input id="calc-less" type="text" inputmode="decimal" value="1/4&quot;"></label>
+          </div>
+          <button class="btn wide" id="calc-apply" type="button">Use this width</button>
+        </details>
+      </section>
+
+      <section class="panel">
+        <h2>Text</h2>
+        <label>Font
+          <span class="inline">
+            <select id="font" data-k="style.font"></select>
+            <button class="btn icon" id="btn-font-del" type="button" title="Remove this font" hidden>×</button>
+          </span>
+        </label>
+        <input id="font-file" type="file" accept=".ttf,.otf,.woff,font/ttf,font/otf,font/woff" hidden>
+        <div class="row">
+          <label title="Height of a capital letter on the first line">Main text <span class="unit-in"><input type="number" min="1" step="0.25" data-k="style.titleH"><i>mm</i></span></label>
+          <label title="Height of a capital letter on the second line">Second line <span class="unit-in"><input type="number" min="1" step="0.25" data-k="style.subH"><i>mm</i></span></label>
+        </div>
+        <label>Text size
+          <select data-k="style.sizeMode">
+            <option value="fixed">Always this size (warn if it won't fit)</option>
+            <option value="shrink">This size, smaller only if it won't fit</option>
+            <option value="fit">As big as fits</option>
+          </select>
+        </label>
+        <div class="row">
+          <label title="Long lines get narrower letters, down to this, before they count as too long (or shrink). 100 = never squeeze.">Squeeze to <span class="unit-in"><input type="number" min="40" max="100" step="5" data-k="style.squeeze"><i>%</i></span></label>
+          <label title="Letter width for every line">Letter width <span class="unit-in"><input type="number" min="40" max="200" step="5" data-k="style.widthPct"><i>%</i></span></label>
+        </div>
+        <div class="row">
+          <label title="Space between lines, mm">Line gap <span class="unit-in"><input type="number" min="0" step="0.2" data-k="style.lineGap"><i>mm</i></span></label>
+          <label title="Extra space between letters, mm (negative tightens)">Spacing <span class="unit-in"><input type="number" step="0.1" data-k="style.track"><i>mm</i></span></label>
+        </div>
+        <div class="seg-row">
+          <div class="seg" data-k="style.align"><button type="button" data-v="left">Left</button><button type="button" data-v="center">Center</button><button type="button" data-v="right">Right</button></div>
+          <label class="check"><input type="checkbox" data-k="style.upper"> ALL CAPS</label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Icon &amp; border</h2>
+        <div class="seg-row">
+          <span class="muted">Icon</span>
+          <div class="seg" data-k="style.iconSide"><button type="button" data-v="left">Left</button><button type="button" data-v="right">Right</button><button type="button" data-v="top" title="Above the text: suits tall labels">Top</button></div>
+        </div>
+        <div class="row three">
+          <label title="Icon height as a % of the space inside the padding">Icon size <span class="unit-in"><input type="number" min="20" max="100" step="5" data-k="style.iconPct"><i>%</i></span></label>
+          <label title="Space between the icon and the text, mm">Gap <span class="unit-in"><input type="number" min="0" step="0.5" data-k="style.iconGap"><i>mm</i></span></label>
+          <label title="Space from the edge (or the border) to the content, mm">Padding <span class="unit-in"><input type="number" min="0" step="0.5" data-k="style.padding"><i>mm</i></span></label>
+        </div>
+        <div class="row">
+          <label title="0 for no border">Border <span class="unit-in"><input type="number" min="0" step="0.2" data-k="style.border"><i>mm</i></span></label>
+          <label title="From the label edge to the border">Border inset <span class="unit-in"><input type="number" min="0" step="0.2" data-k="style.borderInset"><i>mm</i></span></label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Printing</h2>
+        <label>Colors from
+          <select data-k="print.method">
+            <option value="swap">One nozzle: pause and swap filament</option>
+            <option value="multi">Multi-material (AMS, MMU, toolchanger)</option>
+          </select>
+        </label>
+        <label>Text style
+          <select data-k="print.textStyle" id="text-style">
+            <option value="raised">Raised text on a plate</option>
+            <option value="recessed">Recessed: flat top, letters sunk in</option>
+            <option value="inlay">Flush inlay: flat face (multi-material)</option>
+          </select>
+        </label>
+        <label class="check" id="facedown-row"><input type="checkbox" data-k="print.faceDown"> Print face down (smooth face from the bed)</label>
+        <div class="row">
+          <label id="thick-label" title="mm">Plate <span class="unit-in"><input type="number" min="0.2" step="0.1" data-k="print.thick"><i>mm</i></span></label>
+          <label id="ink-label" title="mm">Text height <span class="unit-in"><input type="number" min="0.1" step="0.1" data-k="print.ink"><i>mm</i></span></label>
+        </div>
+        <div class="row">
+          <label>Layer height <span class="unit-in"><input type="number" min="0.04" step="0.04" data-k="print.layer"><i>mm</i></span></label>
+          <label>First layer <span class="unit-in"><input type="number" min="0.04" step="0.04" data-k="print.firstLayer"><i>mm</i></span></label>
+        </div>
+        <div class="row colors">
+          <label>Plate color <input type="color" data-k="print.baseColor"></label>
+          <label>Text color <input type="color" data-k="print.inkColor"></label>
+        </div>
+        <div class="row" id="slot-row">
+          <label title="Filament / tool number for the plate in the 3MF">Plate filament <input type="number" min="1" max="16" step="1" data-k="print.baseSlot"></label>
+          <label title="Filament / tool number for the text in the 3MF">Text filament <input type="number" min="1" max="16" step="1" data-k="print.inkSlot"></label>
+        </div>
+        <div class="plan" id="print-plan"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Printer bed</h2>
+        <label>Printer
+          <select id="printer"></select>
+        </label>
+        <div class="row three">
+          <label>Bed X <span class="unit-in"><input type="number" min="50" step="1" data-k="plate.w"><i>mm</i></span></label>
+          <label>Bed Y <span class="unit-in"><input type="number" min="50" step="1" data-k="plate.h"><i>mm</i></span></label>
+          <label title="Kept clear around the edge of the bed, mm">Margin <span class="unit-in"><input type="number" min="0" step="1" data-k="plate.margin"><i>mm</i></span></label>
+        </div>
+        <div class="row">
+          <label title="Space between labels, mm">Gap <span class="unit-in"><input type="number" min="1" step="0.5" data-k="plate.gap"><i>mm</i></span></label>
+          <span></span>
+        </div>
+        <div class="muted small" id="printer-note"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Download</h2>
+        <label>Format
+          <select data-k="exportFormat" id="export-format">
+            <option value="stl">STL, one body (for a filament swap)</option>
+            <option value="3mf">3MF for Bambu Studio / Orca (Elegoo, Snapmaker)</option>
+            <option value="3mf-prusa">3MF for PrusaSlicer</option>
+            <option value="stl2">STL per color (.zip)</option>
+          </select>
+        </label>
+        <div class="row">
+          <button class="btn" id="dl-label" type="button">This label</button>
+          <button class="btn" id="dl-labels" type="button" title="One file per label, in a zip">Every label (.zip)</button>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="dl-plate" type="button">This plate</button>
+          <button class="btn" id="dl-plates" type="button">All plates (.zip)</button>
+        </div>
+        <div class="muted small" id="dl-note"></div>
+      </section>
+    </aside>
+
+    <main class="stage">
+      <div class="stage-tabs">
+        <button type="button" class="tab active" data-view="labels">Labels</button>
+        <button type="button" class="tab" data-view="plates">Plates <span class="badge" id="plate-count"></span></button>
+        <button type="button" class="tab" data-view="three">3D</button>
+      </div>
+
+      <div class="view active" id="view-labels">
+        <div class="preview">
+          <div class="preview-box" id="preview-box">
+            <svg id="preview" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+          <div class="preview-side">
+            <div class="warns" id="warns"></div>
+            <div class="sel-edit" id="sel-edit">
+              <label>Main text <input id="e-title" type="text" spellcheck="false" placeholder="3&quot; Deck Screws"></label>
+              <label>Second line <input id="e-sub" type="text" spellcheck="false" placeholder="#9 Torx T25 (optional)"></label>
+              <div class="row">
+                <label>Icon <button class="btn icon-pick" id="e-icon" type="button"></button></label>
+                <label title="Leave empty to use the default size. Type W x H, e.g. 3 x 3/4">Size <input id="e-size" type="text" spellcheck="false"></label>
+              </div>
+              <div class="muted small">Use <code>|</code> in the text to start a new line.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="list-bar">
+          <button class="btn primary" id="btn-add" type="button">+ Add label</button>
+          <button class="btn" id="btn-csv" type="button">Import CSV…</button>
+          <button class="btn" id="btn-csv-out" type="button">Export CSV</button>
+          <button class="btn" id="btn-guess" type="button" title="Pick an icon from the text, for labels without one">Guess icons</button>
+          <span class="spacer"></span>
+          <input id="filter" type="search" placeholder="Filter…" spellcheck="false">
+          <span class="muted" id="list-count"></span>
+        </div>
+        <div class="list-wrap">
+          <table class="list" id="list">
+            <thead><tr><th></th><th>Main text</th><th>Second line</th><th>Icon</th><th title="Empty = default size">Size</th><th title="How many to print">Copies</th><th></th></tr></thead>
+            <tbody id="list-body"></tbody>
+          </table>
+          <div class="empty-list" id="empty-list" hidden>No labels yet. <b>Add label</b> or <b>Import CSV</b>.</div>
+        </div>
+      </div>
+
+      <div class="view" id="view-plates">
+        <div class="plate-bar">
+          <div class="chips" id="plate-chips"></div>
+          <span class="muted" id="plate-info"></span>
+        </div>
+        <div class="plate-box"><svg id="plate" xmlns="http://www.w3.org/2000/svg"></svg></div>
+      </div>
+
+      <div class="view" id="view-three">
+        <canvas id="three"></canvas>
+        <div class="three-controls">
+          <div class="seg" id="three-what"><button type="button" data-v="label" class="on">This label</button><button type="button" data-v="plate">This plate</button></div>
+          <span class="muted small" id="three-note"></span>
+          <span class="busy" id="busy" hidden>Building…</span>
+        </div>
+        <div class="empty" id="no-webgl" hidden>
+          <div><p><strong>3D preview unavailable</strong></p><p class="muted">Your browser blocked WebGL. Downloads still work.</p></div>
+        </div>
+      </div>
+
+      <div class="status" id="status"></div>
+    </main>
+  </div>
+
+  <!-- icon picker -->
+  <dialog id="dlg-icon" class="dlg wide">
+    <div class="dlg-head">
+      <h3>Choose an icon</h3>
+      <input id="icon-search" type="search" placeholder="Search: torx, nut, washer…" spellcheck="false">
+      <button class="btn icon close" type="button" data-close>×</button>
+    </div>
+    <div class="chips" id="icon-cats"></div>
+    <div class="icon-grid" id="icon-grid"></div>
+    <div class="dlg-foot">
+      <button class="btn" id="icon-none" type="button">No icon</button>
+      <span class="spacer"></span>
+      <label class="btn" for="gfx-file">Add your own (SVG or image)…</label>
+      <input id="gfx-file" type="file" accept=".svg,image/svg+xml,image/png,image/jpeg,image/webp,image/gif" hidden>
+    </div>
+  </dialog>
+
+  <!-- add a graphic -->
+  <dialog id="dlg-gfx" class="dlg">
+    <div class="dlg-head"><h3>Add a graphic</h3><button class="btn icon close" type="button" data-close>×</button></div>
+    <div class="gfx-body">
+      <div class="gfx-prev"><svg id="gfx-prev" viewBox="-5 -105 110 110"></svg></div>
+      <div class="gfx-opts">
+        <label>Name <input id="gfx-name" type="text" spellcheck="false"></label>
+        <label title="Extra words for search and CSV matching, separated by commas">Search words <input id="gfx-tags" type="text" spellcheck="false" placeholder="e.g. anchor, toggle"></label>
+        <div id="gfx-trace">
+          <label>Ink is
+            <select id="gfx-mode">
+              <option value="dark">Dark parts of the image</option>
+              <option value="light">Light parts of the image</option>
+              <option value="alpha">Opaque parts (transparent background)</option>
+            </select>
+          </label>
+          <label>Threshold <input id="gfx-thr" type="range" min="10" max="245" value="128"></label>
+          <label>Smoothing <input id="gfx-smooth" type="range" min="0" max="4" value="1"></label>
+        </div>
+        <div class="muted small" id="gfx-note"></div>
+      </div>
+    </div>
+    <div class="dlg-foot"><span class="spacer"></span><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" id="gfx-save" type="button">Save and use</button></div>
+  </dialog>
+
+  <!-- CSV import -->
+  <dialog id="dlg-csv" class="dlg wide">
+    <div class="dlg-head"><h3>Import labels from CSV</h3><button class="btn icon close" type="button" data-close>×</button></div>
+    <p class="muted">Columns: <b>title</b>, <b>subtitle</b>, <b>icon</b>, <b>qty</b>, <b>size</b> (like <code>3 x 3/4</code>), in any order with a header row. Without a header, the columns are read as title, subtitle, icon, qty. You can also paste straight from a spreadsheet.</p>
+    <div class="row csv-src">
+      <label class="btn" for="csv-file">Choose a CSV file…</label>
+      <input id="csv-file" type="file" accept=".csv,.tsv,.txt,text/csv" hidden>
+      <button class="btn" id="csv-template" type="button">Download a template</button>
+    </div>
+    <textarea id="csv-text" rows="6" spellcheck="false" placeholder="title,subtitle,icon,qty&#10;3&quot; Deck Screws,#9 Torx T25,torx,1&#10;1/4-20 Hex Nuts,Zinc,hex-nut,2"></textarea>
+    <div class="csv-prev" id="csv-prev"></div>
+    <div class="dlg-foot">
+      <label class="check"><input type="checkbox" id="csv-guess" checked> Guess icons for rows without one</label>
+      <span class="spacer"></span>
+      <select id="csv-mode"><option value="append">Add to the list</option><option value="replace">Replace the list</option></select>
+      <button class="btn primary" id="csv-import" type="button" disabled>Import</button>
+    </div>
+  </dialog>
+
+  <!-- projects -->
+  <dialog id="dlg-project" class="dlg">
+    <div class="dlg-head"><h3>Projects</h3><button class="btn icon close" type="button" data-close>×</button></div>
+    <p class="muted small" id="proj-persist"></p>
+    <div class="row">
+      <button class="btn" id="proj-new" type="button">New project</button>
+      <button class="btn" id="proj-rename" type="button">Rename…</button>
+    </div>
+    <div class="row">
+      <button class="btn" id="proj-copy" type="button">Save a copy…</button>
+      <button class="btn" id="proj-download" type="button">Download this project</button>
+    </div>
+    <div class="row">
+      <label class="btn" for="proj-file">Open a project file…</label>
+      <input id="proj-file" type="file" accept=".json,application/json" hidden>
+      <span></span>
+    </div>
+    <h4>Saved in this browser</h4>
+    <div class="proj-list" id="proj-list"></div>
+    <h4>Your fonts and graphics</h4>
+    <div class="proj-list" id="asset-list"></div>
+  </dialog>
+
+  <!-- help -->
+  <dialog id="dlg-help" class="dlg wide">
+    <div class="dlg-head"><h3>How to print two-color labels</h3><button class="btn icon close" type="button" data-close>×</button></div>
+    <div class="help" id="help-body"></div>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

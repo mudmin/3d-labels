@@ -1,0 +1,6 @@
+# Scratch output from the tools/ scripts
+*.stl
+*.3mf
+out/
+icons.svg
+icons.png
