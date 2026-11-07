@@ -434,6 +434,35 @@ function rowHTML(l) {
 }
 const sizeText = (s) => `${U.fmtLen(s.w, S.P.units)} x ${U.fmtLen(s.h, S.P.units)}`;
 
+// One label's own size, typed as "W x H", or a single length for the width alone
+// (keeping the default height). Empty means the default size. Returns false when the
+// text can't be read, true when the label's size was set or cleared.
+const SIZE_HINT = 'Type width x height, like 4 x 1, or just a width. Leave it empty for the default size.';
+function setLabelSize(l, text) {
+  text = text.trim();
+  if (!text) { l.size = null; return true; }
+  let s = U.parseSize(text, S.P.units);
+  if (!s && !/x|×|\*|by/i.test(text)) {
+    const w = U.parseLen(text, S.P.units);
+    if (w > 0) s = { w, h: S.P.size.h };
+  }
+  if (!s) return false;
+  l.size = { w: Math.round(s.w * 100) / 100, h: Math.round(s.h * 100) / 100 };
+  // the same as the default size is no override at all
+  if (Math.abs(l.size.w - S.P.size.w) < 0.01 && Math.abs(l.size.h - S.P.size.h) < 0.01) l.size = null;
+  return true;
+}
+// When a size box loses focus: tidy readable text, keep unreadable text so it can be fixed.
+function sizeBoxDone(input, l) {
+  if (!l) return;
+  if (setLabelSize(l, input.value)) {
+    input.value = l.size ? sizeText(l.size) : '';
+    input.classList.remove('bad');
+    if ($('status').textContent.startsWith("Couldn't read the size")) setStatus('');
+  }
+  else { input.classList.add('bad'); setStatus(`Couldn't read the size "${input.value.trim()}". ` + SIZE_HINT, true); }
+}
+
 function matchesFilter(l) {
   if (!S.filter) return true;
   const t = (l.title + ' ' + l.sub + ' ' + iconName(l.icon)).toLowerCase();
@@ -589,13 +618,9 @@ function bindList() {
     else if (t.classList.contains('f-sub')) l.sub = t.value;
     else if (t.classList.contains('f-qty')) { const v = parseInt(t.value, 10); if (!(v >= 0)) return; l.qty = v; }
     else if (t.classList.contains('f-size')) {
-      if (!t.value.trim()) { l.size = null; t.classList.remove('bad'); }
-      else {
-        const s = U.parseSize(t.value, S.P.units);
-        t.classList.toggle('bad', !s);
-        if (!s) return;
-        l.size = { w: Math.round(s.w * 100) / 100, h: Math.round(s.h * 100) / 100 };
-      }
+      const ok = setLabelSize(l, t.value);
+      t.classList.toggle('bad', !ok);
+      if (!ok) return;
     } else return;
     labelEdited(l, 'row');
     if (t.classList.contains('f-qty')) renderList();
@@ -612,8 +637,7 @@ function bindList() {
   });
   body.addEventListener('focusout', (e) => {
     if (e.target.classList.contains('f-size')) {
-      const l = S.P.labels.find((x) => x.id === e.target.closest('tr').dataset.id);
-      if (l) { e.target.value = l.size ? sizeText(l.size) : ''; e.target.classList.remove('bad'); }
+      sizeBoxDone(e.target, S.P.labels.find((x) => x.id === e.target.closest('tr').dataset.id));
     }
   });
 
@@ -639,17 +663,11 @@ function bindList() {
   $('e-size').addEventListener('input', (e) => {
     const l = selLabel();
     if (!l) return;
-    const t = e.target;
-    if (!t.value.trim()) { l.size = null; t.classList.remove('bad'); }
-    else {
-      const s = U.parseSize(t.value, S.P.units);
-      t.classList.toggle('bad', !s);
-      if (!s) return;
-      l.size = { w: Math.round(s.w * 100) / 100, h: Math.round(s.h * 100) / 100 };
-    }
-    labelEdited(l, 'editor');
+    const ok = setLabelSize(l, e.target.value);
+    e.target.classList.toggle('bad', !ok);
+    if (ok) labelEdited(l, 'editor');
   });
-  $('e-size').addEventListener('blur', (e) => { const l = selLabel(); e.target.value = l?.size ? sizeText(l.size) : ''; e.target.classList.remove('bad'); });
+  $('e-size').addEventListener('blur', (e) => sizeBoxDone(e.target, selLabel()));
   $('e-icon').addEventListener('click', () => { if (S.sel) openIconPicker(S.sel); });
 }
 
@@ -663,7 +681,8 @@ function renderSelected(fromEditor = false) {
     if (document.activeElement !== $('e-title')) $('e-title').value = l.title;
     if (document.activeElement !== $('e-sub')) $('e-sub').value = l.sub;
     if (document.activeElement !== $('e-size')) $('e-size').value = l.size ? sizeText(l.size) : '';
-    $('e-size').placeholder = 'default ' + sizeText(S.P.size);
+    $('e-size').placeholder = 'same as the rest: ' + sizeText(S.P.size);
+    $('e-size').classList.remove('bad');
   }
   $('e-icon').innerHTML = `${iconSVG(l.icon)}<span>${esc(iconName(l.icon) || 'None: click to choose')}</span>`;
   renderPreview();

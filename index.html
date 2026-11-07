@@ -201,7 +201,7 @@
               <label>Second line <input id="e-sub" type="text" spellcheck="false" placeholder="#9 Torx T25 (optional)"></label>
               <div class="row">
                 <label>Icon <button class="btn icon-pick" id="e-icon" type="button"></button></label>
-                <label title="Leave empty to use the default size. Type W x H, e.g. 3 x 3/4">Size <input id="e-size" type="text" spellcheck="false"></label>
+                <label title="Give just this label its own size, for a bigger bin in the row. Type width x height, like 4 x 1, or just a width. Leave it empty for the default size.">Size, this label only <input id="e-size" type="text" spellcheck="false"></label>
               </div>
               <div class="muted small">Use <code>|</code> in the text to start a new line.</div>
             </div>
@@ -219,7 +219,7 @@
         </div>
         <div class="list-wrap">
           <table class="list" id="list">
-            <thead><tr><th></th><th>Main text</th><th>Second line</th><th>Icon</th><th title="Empty = default size">Size</th><th title="How many to print">Copies</th><th></th></tr></thead>
+            <thead><tr><th></th><th>Main text</th><th>Second line</th><th>Icon</th><th title="Only for a label that needs its own size: width x height, or just a width. Empty = the default size.">Size</th><th title="How many to print">Copies</th><th></th></tr></thead>
             <tbody id="list-body"></tbody>
           </table>
           <div class="empty-list" id="empty-list" hidden>No labels yet. <b>Add label</b> or <b>Import CSV</b>.</div>
