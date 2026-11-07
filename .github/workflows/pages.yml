@@ -1,8 +1,8 @@
 name: Deploy to GitHub Pages
 
-# Manual only while the project is private: a Pages site is public even when the repo isn't.
-# Add `push: branches: [main]` back here to deploy on every push.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
