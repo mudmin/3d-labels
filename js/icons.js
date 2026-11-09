@@ -82,6 +82,11 @@ export const ICONS = [
     draw: (P) => head(P, P.ngon(50, 50, 27, 6, 0)),
   },
   {
+    // a hex washer head seen from above: the hex inside its washer, for a nut driver
+    id: 'hex-washer-head', name: 'Hex head (top)', cat: 'drive', tags: ['hex head', 'hex washer', 'hex washer head', 'nut driver', 'nut setter', 'external hex', 'sheet metal', 'tek', '1/4"', '5/16"'],
+    draw: (P) => P.union(P.ring(50, 50, 46, 37), P.ngon(50, 50, 28, 6, 0)),
+  },
+  {
     id: 'square-drive', name: 'Square (Robertson)', cat: 'drive', tags: ['robertson', 'square drive', 'square', 'sq1', 'sq2', 'sq3'],
     draw: (P) => head(P, P.box(50, 50, 36, 36, 2)),
   },

@@ -257,6 +257,10 @@ const xmlEsc = (s) => String(s).replace(/[<>&"']/g, (c) => ({ '<': '&lt;', '>': 
 // 3D/Objects/, an object made of components per label in 3D/3dmodel.model, and
 // Metadata/model_settings.config naming the parts and their filaments. Other slicers
 // that read the 3MF production extension still get the right shapes.
+// A part may carry a color ("#rrggbb"). The parts are then also tagged with standard
+// 3MF colors, so Bambu Studio offers its color-to-filament dialog and adds filament
+// slots the project lacks; without that it moves parts past its last filament onto
+// filament 1.
 export function write3MF(objects, { zipSync, strToU8, title = 'labels', flavor = 'bambu' }) {
   if (flavor === 'prusa') return write3MFPrusa(objects, { zipSync, strToU8, title });
   const enc = (s) => strToU8(s);
@@ -267,21 +271,31 @@ export function write3MF(objects, { zipSync, strToU8, title = 'labels', flavor =
     const h = (v, len) => v.toString(16).padStart(len, '0').slice(-len);
     return `${h(kind, 8)}-${h(n >> 16, 4)}-4${h(n, 3)}-8${h(n * 7, 3)}-${h(n * 2654435761 >>> 0, 12)}`;
   };
-  const NS = 'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" requiredextensions="p"';
+  const NS = 'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02" requiredextensions="p"';
+  const hex = (c) => (/^#?[0-9a-f]{6}$/i.test(c || '') ? '#' + c.replace('#', '').toUpperCase() : null);
   const files = {};
   let mainObjs = '', items = '', rels = '', settings = '';
   let id = 1;
   objects.forEach((obj, oi) => {
     const path = `/3D/Objects/object_${oi + 1}.model`;
     let partObjs = '', comps = '', parts = '';
+    // one color per filament; skipped when two filaments would share a color, since
+    // Bambu would then merge them into one
+    const colorOf = new Map();
+    for (const part of obj.parts) if (part.mesh.idx.length) colorOf.set(part.extruder, hex(part.color));
+    const palette = [...new Set(colorOf.values())];
+    const useColors = palette.every(Boolean) && palette.length === colorOf.size && palette.length > 1;
+    const groupId = useColors ? id++ : 0;
+    if (useColors) partObjs += `  <m:colorgroup id="${groupId}">\n${palette.map((c) => `   <m:color color="${c}FF"/>\n`).join('')}  </m:colorgroup>\n`;
     for (const part of obj.parts) {
       const { pos, idx } = part.mesh;
       if (!idx.length) continue;
       const pid = id++;
+      const pidAttr = useColors ? ` pid="${groupId}" pindex="${palette.indexOf(colorOf.get(part.extruder))}"` : '';
       const v = [], t = [];
       for (let i = 0; i < pos.length; i += 3) v.push(`<vertex x="${fmtN(pos[i])}" y="${fmtN(pos[i + 1])}" z="${fmtN(pos[i + 2])}"/>`);
       for (let i = 0; i < idx.length; i += 3) t.push(`<triangle v1="${idx[i]}" v2="${idx[i + 1]}" v3="${idx[i + 2]}"/>`);
-      partObjs += `  <object id="${pid}" p:UUID="${uuid(0x10000)}" type="model">\n   <mesh>\n    <vertices>\n${v.join('\n')}\n    </vertices>\n    <triangles>\n${t.join('\n')}\n    </triangles>\n   </mesh>\n  </object>\n`;
+      partObjs += `  <object id="${pid}"${pidAttr} p:UUID="${uuid(0x10000)}" type="model">\n   <mesh>\n    <vertices>\n${v.join('\n')}\n    </vertices>\n    <triangles>\n${t.join('\n')}\n    </triangles>\n   </mesh>\n  </object>\n`;
       comps += `    <component p:path="${path}" objectid="${pid}" p:UUID="${uuid(0x20000)}" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>\n`;
       parts += `    <part id="${pid}" subtype="normal_part">\n      <metadata key="name" value="${xmlEsc(part.name)}"/>\n      <metadata key="extruder" value="${part.extruder}"/>\n    </part>\n`;
     }

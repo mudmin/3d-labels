@@ -276,7 +276,7 @@ function renderPlan() {
     h += `<div class="big">Multi-material: no pausing</div>`;
     h += `<div>The 3MF sets the plate to filament ${pr.baseSlot} ${sw(pr.baseColor)} and the text to filament ${pr.inkSlot} ${sw(pr.inkColor)}. ${plan.layers} layers in all.</div>`;
     h += `<details><summary>Which file for my slicer?</summary><ul>
-      <li><b>Bambu Studio, OrcaSlicer, Elegoo Slicer, Snapmaker Orca:</b> 3MF for Bambu Studio / Orca.</li>
+      <li><b>Bambu Studio, OrcaSlicer, Elegoo Slicer, Snapmaker Orca:</b> 3MF for Bambu Studio / Orca. Bambu Studio may say the file is "not from Bambu Lab" or (in version 2.08.2) has an "invalid config" and will "load geometry data only". Click OK: that only means the file carries no printer settings, so yours are kept. The plate and text carry your two colors, so Bambu can match them to filaments, adding a second filament if the project has only one.</li>
       <li><b>PrusaSlicer:</b> 3MF for PrusaSlicer.</li>
       <li><b>Cura and others:</b> STL per color. Load both files at once, say <b>Yes</b> if asked to load them as one object with several parts (in Cura: select both, right-click › Merge models), then set the text part to your second filament.</li></ul></details>`;
   } else if (plan.s.multiOnly) {
@@ -1053,8 +1053,8 @@ function meshesFor(l, cache) {
 }
 
 const partList = (m) => [
-  m.base && { name: 'plate', mesh: m.base, extruder: S.P.print.baseSlot || 1 },
-  m.ink && { name: 'text', mesh: m.ink, extruder: S.P.print.inkSlot || 2 },
+  m.base && { name: 'plate', mesh: m.base, extruder: S.P.print.baseSlot || 1, color: S.P.print.baseColor },
+  m.ink && { name: 'text', mesh: m.ink, extruder: S.P.print.inkSlot || 2, color: S.P.print.inkColor },
 ].filter(Boolean);
 
 const flavorOf = (f) => (f === '3mf-prusa' ? 'prusa' : 'bambu');

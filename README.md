@@ -31,7 +31,7 @@ Type in the list to edit labels. **Enter** moves down a row and adds a new label
 
 **Multi-material (AMS, MMU, toolchanger).** No pausing. Download a 3MF and the plate and text arrive as two parts of one object, already set to filaments 1 and 2. You can change those numbers in the Printing panel. The two slicer families read 3MF parts differently, so there are two 3MF choices:
 
-- **3MF for Bambu Studio / Orca** works in OrcaSlicer, Bambu Studio and their forks: Elegoo Slicer, Snapmaker Orca (U1), Creality Print.
+- **3MF for Bambu Studio / Orca** works in OrcaSlicer, Bambu Studio and their forks: Elegoo Slicer, Snapmaker Orca (U1), Creality Print. Bambu Studio may warn that the file is "not from Bambu Lab", or in version 2.08.2 that it has an "invalid config", and load "geometry data only". Click OK. The file carries no printer settings on purpose, so your own settings stay in place. The plate and text carry your plate and text colors, so Bambu can match them to filaments, adding a second filament if the project has only one.
 - **3MF for PrusaSlicer**.
 - **STL per color** is for Cura and anything else. Load both files together as one object with two parts, then set the text part's filament.
 
