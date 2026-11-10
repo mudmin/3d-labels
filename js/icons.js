@@ -456,6 +456,18 @@ export const ICONS = [
       P.rect(21, 60, 10, 38), P.rect(45, 60, 10, 38), P.rect(69, 60, 10, 38)),
   },
   {
+    // lying on its side: grip and collar on the left, the bulged spring-leaf pin pointing right
+    id: 'banana-plug', name: 'Banana plug', cat: 'elec', tags: ['banana plug', 'banana', '4mm plug', 'test lead', 'test leads', 'multimeter'],
+    draw: (P) => P.union(P.rect(2, 28, 44, 44, 9), P.rect(44, 35, 10, 30, 2), P.rect(52, 44, 45, 12, 6), P.ellipse(76, 50, 16, 13)),
+  },
+  {
+    // side view, closed: splayed handles, the pivot, and tapered jaws with a toothed seam
+    id: 'croc-clip', name: 'Alligator clip', cat: 'elec', tags: ['alligator clip', 'croc clip', 'crocodile clip', 'test clip', 'test lead', 'jumper', 'clip'],
+    draw: (P) => P.sub(
+      P.union(P.line([[9, 15], [42, 42]], 14), P.line([[9, 85], [42, 58]], 14), P.poly([[36, 34], [97, 43], [97, 57], [36, 66]]), P.circle(40, 50, 13)),
+      P.line(P.zigzag(54, 50, 99, 50, 4, 4), 5, { cap: 'butt' })),
+  },
+  {
     id: 'cable-clip', name: 'Cable clip', cat: 'elec', tags: ['cable clip', 'cable staple', 'wire clip', 'cable clamp', 'p clip'],
     draw: (P) => P.union(P.arc(50, 62, 36, 180, 360, 12, { cap: 'butt' }), P.rect(2, 56, 26, 12, 3), P.rect(72, 56, 26, 12, 3), P.circle(50, 64, 20)),
   },
@@ -542,6 +554,18 @@ export const ICONS = [
   {
     id: 'drill-bit', name: 'Drill bit', cat: 'misc', tags: ['drill bit', 'drill bits', 'twist drill', 'drill', 'bits'],
     draw: (P) => P.union(P.rect(37, 2, 26, 34, 2), P.sub(P.rect(37, 36, 26, 50), ...[44, 60, 76].map((y) => P.rotate(P.box(50, y, 40, 7), -30, 50, y))), P.poly([[37, 85], [63, 85], [50, 99]])),
+  },
+  {
+    // the classic double-edge blade with its center slot and side notches
+    id: 'razor-blade', name: 'Razor blade', cat: 'misc', tags: ['razor blade', 'razor blades', 'blade', 'blades', 'double edge', 'single edge'],
+    draw: (P) => P.sub(P.rect(3, 26, 94, 48, 4),
+      P.box(50, 50, 52, 9, 4.5), P.circle(50, 50, 10), P.circle(24, 50, 7), P.circle(76, 50, 7),
+      P.poly([[44, 25], [56, 25], [50, 33]]), P.poly([[44, 75], [56, 75], [50, 67]])),
+  },
+  {
+    // a #11 style blade: straight back, edge sloping to the point, slot in the tang
+    id: 'scalpel-blade', name: 'Scalpel blade', cat: 'misc', tags: ['scalpel', 'scalpel blade', 'scalpel blades', 'hobby knife', 'x-acto', 'craft blade', 'blade', 'blades'],
+    draw: (P) => P.sub(P.poly([[3, 34], [52, 34], [97, 68], [3, 68]]), P.box(26, 51, 32, 9, 4.5)),
   },
   {
     id: 'binder-clip', name: 'Spring clip', cat: 'misc', tags: ['binder clip', 'spring clip', 'clip', 'clips', 'bulldog clip'],
